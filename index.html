@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Помощник юриста</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#F1F1EE">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Помощник юриста">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600&family=PT+Serif:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F1F1EE; --sheet:#FFFFFF; --ink:#14151A; --ink2:#6B6D74;
+  --rule:#E3E3DD; --rule2:#F0F0EB; --field:#FFFFFF;
+  --seal:#8E2B2B; --seal-soft:#F7EBEB;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#111113; --sheet:#1A1A1D; --ink:#E9E8E4; --ink2:#92928C;
+    --rule:#2C2C31; --rule2:#232327; --field:#151518;
+    --seal:#DC847C; --seal-soft:#2B1D1D;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#111113; --sheet:#1A1A1D; --ink:#E9E8E4; --ink2:#92928C;
+  --rule:#2C2C31; --rule2:#232327; --field:#151518;
+  --seal:#DC847C; --seal-soft:#2B1D1D;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--paper);color:var(--ink);
+  font-family:"Golos Text","Segoe UI",system-ui,-apple-system,sans-serif;
+  font-size:16px;line-height:1.5;-webkit-text-size-adjust:100%;
+  font-variant-numeric:tabular-nums;
+}
+.wrap{max-width:720px;margin:0 auto;padding:0 16px 104px}
+
+/* ---- шапка ---- */
+header{padding:16px 0 10px;display:flex;align-items:center;gap:12px}
+header .t{flex:1;min-width:0}
+h1{font-family:"PT Serif",Georgia,serif;font-size:20px;font-weight:700;margin:0;letter-spacing:-.01em}
+header .r{font-size:12.5px;color:var(--ink2);margin-top:1px}
+.icon-btn{
+  flex:0 0 auto;width:36px;height:36px;border-radius:99px;border:1px solid var(--rule);
+  background:none;color:var(--ink2);font:inherit;font-size:15px;cursor:pointer;line-height:1
+}
+
+/* ---- лист ---- */
+.sheet{background:var(--sheet);border:1px solid var(--rule);border-radius:4px;padding:18px 16px}
+.sheet + .sheet{margin-top:12px}
+.lbl{
+  font-size:11px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--ink2);padding-bottom:7px;border-bottom:1px solid var(--rule);margin-bottom:14px
+}
+.hint{font-size:13px;color:var(--ink2);margin:-8px 0 14px;line-height:1.45}
+
+/* ---- поля ---- */
+.f{margin-bottom:14px}
+.f:last-child{margin-bottom:0}
+.f label{display:block;font-size:12.5px;color:var(--ink2);margin-bottom:5px}
+input[type=text],input[type=number],input[type=date],select,textarea{
+  width:100%;font:inherit;font-size:16px;color:var(--ink);background:var(--field);
+  border:1px solid var(--rule);border-radius:3px;padding:12px;font-variant-numeric:tabular-nums
+}
+textarea{min-height:92px;resize:vertical;line-height:1.5}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+.two{display:flex;gap:10px}
+.two > *{flex:1;min-width:0}
+.chips{display:flex;gap:6px;margin:-6px 0 14px;flex-wrap:wrap}
+.chips button{
+  font:inherit;font-size:12.5px;background:none;color:var(--ink2);
+  border:1px solid var(--rule);border-radius:99px;padding:6px 12px;cursor:pointer
+}
+.chips button:active{color:var(--ink);border-color:var(--ink)}
+.cb{display:flex;gap:10px;align-items:flex-start;font-size:14px;margin-bottom:12px}
+.cb input{margin:3px 0 0;flex:0 0 auto;width:17px;height:17px;accent-color:var(--seal)}
+.cb small{display:block;color:var(--ink2);font-size:12.5px;line-height:1.4}
+button.go{
+  width:100%;font:inherit;font-size:15px;font-weight:500;letter-spacing:.02em;
+  background:var(--ink);color:var(--sheet);border:none;border-radius:3px;padding:14px;cursor:pointer
+}
+button.go:active{opacity:.8}
+.err{color:var(--seal);font-size:13px;margin-top:10px}
+
+/* ---- результат ---- */
+.res{display:none;margin-top:12px}
+.res.on{display:block}
+.total{background:var(--sheet);border:1px solid var(--rule);border-radius:4px;padding:18px 16px}
+.total .cap{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink2);margin-bottom:8px}
+.total .sum{
+  font-family:"PT Serif",Georgia,serif;font-weight:700;color:var(--seal);
+  font-size:clamp(30px,9vw,44px);line-height:1.08;letter-spacing:-.02em;word-break:break-word
+}
+.total .wrds{font-size:13px;color:var(--ink2);margin-top:9px;line-height:1.45}
+.total .meta{font-size:12.5px;color:var(--ink2);margin-top:12px;padding-top:11px;border-top:1px solid var(--rule2)}
+.acts{display:flex;gap:9px;margin-top:11px}
+.acts button{
+  flex:1;font:inherit;font-size:14px;background:none;color:var(--ink);
+  border:1px solid var(--rule);border-radius:3px;padding:12px;cursor:pointer
+}
+
+/* строки периодов — без боковой прокрутки */
+.pers{margin-top:12px;background:var(--sheet);border:1px solid var(--rule);border-radius:4px;overflow:hidden}
+.per{display:flex;gap:12px;align-items:baseline;padding:11px 14px;border-bottom:1px solid var(--rule2)}
+.per:last-child{border-bottom:none}
+.per .l{flex:1;min-width:0}
+.per .d{font-size:13.5px}
+.per .m{font-size:12px;color:var(--ink2);margin-top:2px}
+.per .v{font-size:14px;font-weight:500;white-space:nowrap}
+.per.skip .d,.per.skip .v{color:var(--ink2);font-style:italic}
+.per.sum{background:var(--rule2);border-top:1px solid var(--rule)}
+.per.sum .d,.per.sum .v{font-weight:600}
+.note{font-size:12.5px;color:var(--ink2);margin-top:11px;line-height:1.45}
+.warn{background:var(--seal-soft);color:var(--seal);border-radius:3px;padding:10px 12px;font-size:13px;margin-top:11px;line-height:1.45}
+
+/* ---- задачи ---- */
+.gh{font-size:11px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--ink2);margin:18px 0 8px}
+.gh.late{color:var(--seal)}
+.task{display:flex;gap:11px;align-items:flex-start;background:var(--sheet);border:1px solid var(--rule);border-radius:4px;padding:13px;margin-bottom:8px}
+.task input{margin:2px 0 0;flex:0 0 auto;width:18px;height:18px;accent-color:var(--seal)}
+.task .b{flex:1;min-width:0}
+.task .x{font-size:14.5px;line-height:1.4}
+.task .s{font-size:12.5px;color:var(--ink2);margin-top:3px}
+.task.done .x{text-decoration:line-through;color:var(--ink2)}
+.task .del{background:none;border:none;color:var(--ink2);font:inherit;font-size:20px;line-height:1;cursor:pointer;padding:0 2px;flex:0 0 auto}
+.empty{color:var(--ink2);font-size:14px;text-align:center;padding:26px 12px}
+.rowbtn{display:flex;justify-content:flex-end;margin-top:4px}
+.rowbtn button{font:inherit;font-size:12.5px;background:none;border:none;color:var(--ink2);cursor:pointer;padding:4px}
+
+/* ---- панели и нижнее меню ---- */
+section{display:none}
+section.on{display:block}
+nav{
+  position:fixed;left:0;right:0;bottom:0;z-index:5;
+  display:flex;background:var(--sheet);border-top:1px solid var(--rule);
+  padding-bottom:env(safe-area-inset-bottom,0px)
+}
+nav button{
+  flex:1;background:none;border:none;font:inherit;font-size:11.5px;color:var(--ink2);
+  padding:10px 2px 11px;cursor:pointer;position:relative
+}
+nav button b{display:block;font-size:16px;font-weight:600;line-height:1.25;font-variant-numeric:tabular-nums}
+nav button[aria-selected="true"]{color:var(--seal)}
+nav button[aria-selected="true"]::before{
+  content:"";position:absolute;top:0;left:50%;transform:translateX(-50%);
+  width:26px;height:2px;background:var(--seal)
+}
+.toast{
+  position:fixed;left:50%;transform:translateX(-50%);bottom:calc(74px + env(safe-area-inset-bottom,0px));
+  background:var(--ink);color:var(--sheet);padding:10px 17px;border-radius:99px;
+  font-size:14px;opacity:0;pointer-events:none;transition:opacity .18s;z-index:9
+}
+.toast.on{opacity:1}
+@media (prefers-reduced-motion:reduce){.toast{transition:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="t">
+    <h1>Помощник юриста</h1>
+    <div class="r" id="rateLine">—</div>
+  </div>
+  <button class="icon-btn" id="themeBtn" type="button" title="Тема">◐</button>
+</header>
+
+<!-- ===== 395 ===== -->
+<section id="p395" class="on">
+  <div class="sheet">
+    <div class="lbl">Проценты по ст. 395 ГК РФ</div>
+    <div class="f"><label for="a-sum">Сумма долга, ₽</label><input type="text" inputmode="decimal" id="a-sum" placeholder="1 250 000"></div>
+    <div class="two">
+      <div class="f"><label for="a-from">Первый день просрочки</label><input type="date" id="a-from"></div>
+      <div class="f"><label for="a-to">По включительно</label><input type="date" id="a-to"></div>
+    </div>
+    <div class="chips"><button type="button" data-set="a-to">По сегодня</button><button type="button" data-set="a-from">С сегодня</button></div>
+    <label class="cb"><input type="checkbox" id="a-mor"><span>Исключить мораторий 01.04.2022 — 01.10.2022<small>Постановление Правительства РФ от 28.03.2022 № 497</small></span></label>
+    <button class="go" id="a-go" type="button">Рассчитать</button>
+    <div class="err" id="a-err"></div>
+  </div>
+  <div class="res" id="a-res"></div>
+</section>
+
+<!-- ===== НЕУСТОЙКА ===== -->
+<section id="pneu">
+  <div class="sheet">
+    <div class="lbl">Договорная неустойка</div>
+    <div class="f"><label for="n-sum">Сумма долга, ₽</label><input type="text" inputmode="decimal" id="n-sum" placeholder="1 250 000"></div>
+    <div class="f"><label for="n-mode">Размер</label>
+      <select id="n-mode">
+        <option value="pct">Процент за день просрочки</option>
+        <option value="k300">1/300 ключевой ставки за день</option>
+        <option value="k150">1/150 ключевой ставки за день</option>
+        <option value="k130">1/130 ключевой ставки за день</option>
+      </select></div>
+    <div class="f" id="n-pct-wrap"><label for="n-pct">Процент за день, %</label><input type="text" inputmode="decimal" id="n-pct" placeholder="0,1"></div>
+    <div class="two">
+      <div class="f"><label for="n-from">С</label><input type="date" id="n-from"></div>
+      <div class="f"><label for="n-to">По включительно</label><input type="date" id="n-to"></div>
+    </div>
+    <div class="chips"><button type="button" data-set="n-to">По сегодня</button><button type="button" data-set="n-from">С сегодня</button></div>
+    <div class="f"><label for="n-cap">Предел неустойки, % от долга — если есть</label><input type="text" inputmode="decimal" id="n-cap" placeholder="10"></div>
+    <label class="cb"><input type="checkbox" id="n-mor"><span>Исключить мораторий 01.04.2022 — 01.10.2022</span></label>
+    <button class="go" id="n-go" type="button">Рассчитать</button>
+    <div class="err" id="n-err"></div>
+  </div>
+  <div class="res" id="n-res"></div>
+</section>
+
+<!-- ===== ГОСПОШЛИНА ===== -->
+<section id="pgp">
+  <div class="sheet">
+    <div class="lbl">Государственная пошлина</div>
+    <div class="hint">Ставки ст. 333.19 и 333.21 НК РФ в редакции с 09.09.2024.</div>
+    <div class="two">
+      <div class="f"><label for="g-court">Суд</label><select id="g-court"><option value="as">Арбитражный</option><option value="soy">Общей юрисдикции</option></select></div>
+      <div class="f"><label for="g-who">Заявитель</label><select id="g-who"><option value="org">Организация</option><option value="fiz">Физлицо / ИП</option></select></div>
+    </div>
+    <div class="f"><label for="g-type">Что подаётся</label>
+      <select id="g-type">
+        <option value="imu">Имущественный иск по цене иска</option>
+        <option value="prikaz">Заявление о судебном приказе</option>
+        <option value="neimu">Неимущественное требование</option>
+        <option value="dogovor">Спор по заключению, изменению, расторжению договора</option>
+        <option value="nenpa">Оспаривание ненормативного акта, действий</option>
+        <option value="apel">Апелляционная жалоба</option>
+        <option value="kass">Кассационная жалоба</option>
+        <option value="kassvs">Кассационная (надзорная) в ВС РФ</option>
+        <option value="obesp">Заявление об обеспечении иска</option>
+        <option value="bankr">Заявление о банкротстве</option>
+      </select></div>
+    <div class="f" id="g-sum-wrap"><label for="g-sum">Цена иска, ₽</label><input type="text" inputmode="decimal" id="g-sum" placeholder="1 250 000"></div>
+    <button class="go" id="g-go" type="button">Рассчитать</button>
+    <div class="err" id="g-err"></div>
+  </div>
+  <div class="res" id="g-res"></div>
+</section>
+
+<!-- ===== СРОКИ ===== -->
+<section id="psrok">
+  <div class="sheet">
+    <div class="lbl">Процессуальный срок</div>
+    <div class="f"><label for="s-type">Срок</label><select id="s-type"></select></div>
+    <div class="two" id="s-custom-wrap" style="display:none">
+      <div class="f"><label for="s-n">Количество</label><input type="number" id="s-n" value="30" min="1"></div>
+      <div class="f"><label for="s-unit">Единица</label><select id="s-unit"><option value="d">дней</option><option value="m">месяцев</option><option value="y">лет</option></select></div>
+    </div>
+    <div class="f"><label for="s-base" id="s-base-lab">Дата начала</label><input type="date" id="s-base"></div>
+    <div class="chips"><button type="button" data-set="s-base">Сегодня</button></div>
+    <button class="go" id="s-go" type="button">Рассчитать</button>
+    <div class="err" id="s-err"></div>
+  </div>
+  <div class="res" id="s-res"></div>
+</section>
+
+<!-- ===== ПЛАН ===== -->
+<section id="ptask">
+  <div class="sheet">
+    <div class="lbl">Надиктовать задачи</div>
+    <div class="hint">Микрофон на клавиатуре, говорите сплошным текстом. Разберу на отдельные задачи и расставлю даты: «завтра», «в четверг», «до 14.10», «5 ноября».</div>
+    <div class="f"><textarea id="t-in" placeholder="В понедельник подать кассацию по Панухину, до четверга отзыв по ФАРБИ, во вторник созвон с Тойкиным"></textarea></div>
+    <div class="f"><label for="t-case">Дело или клиент — ко всем задачам сразу, необязательно</label><input type="text" id="t-case" placeholder="Русвельт · А71-10397/2026"></div>
+    <button class="go" id="t-go" type="button">Разобрать на задачи</button>
+    <div class="err" id="t-err"></div>
+  </div>
+  <div id="t-list"></div>
+  <div class="rowbtn"><button id="t-clean" type="button">Убрать выполненные</button></div>
+</section>
+
+</div>
+
+<nav id="tabs">
+  <button data-p="p395" aria-selected="true"><b>395</b>проценты</button>
+  <button data-p="pneu" aria-selected="false"><b>%</b>неустойка</button>
+  <button data-p="pgp" aria-selected="false"><b>₽</b>пошлина</button>
+  <button data-p="psrok" aria-selected="false"><b>📅</b>сроки</button>
+  <button data-p="ptask" aria-selected="false"><b>✓</b>план</button>
+</nav>
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+
+/* ====== ключевая ставка ЦБ РФ: дата начала действия ====== */
+var RATES=[["2013-09-13",5.5],["2014-03-03",7],["2014-04-28",7.5],["2014-07-28",8],["2014-11-05",9.5],
+["2014-12-12",10.5],["2014-12-16",17],["2015-02-02",15],["2015-03-16",14],["2015-05-05",12.5],
+["2015-06-16",11.5],["2015-08-03",11],["2016-06-14",10.5],["2016-09-19",10],["2017-03-27",9.75],
+["2017-05-02",9.25],["2017-06-19",9],["2017-09-18",8.5],["2017-10-30",8.25],["2017-12-18",7.75],
+["2018-02-12",7.5],["2018-03-26",7.25],["2018-09-17",7.5],["2018-12-17",7.75],["2019-06-17",7.5],
+["2019-07-29",7.25],["2019-09-09",7],["2019-10-28",6.5],["2019-12-16",6.25],["2020-02-10",6],
+["2020-04-27",5.5],["2020-06-22",4.5],["2020-07-27",4.25],["2021-03-22",4.5],["2021-04-26",5],
+["2021-06-15",5.5],["2021-07-26",6.5],["2021-09-13",6.75],["2021-10-25",7.5],["2021-12-20",8.5],
+["2022-02-14",9.5],["2022-02-28",20],["2022-04-11",17],["2022-05-04",14],["2022-05-27",11],
+["2022-06-14",9.5],["2022-07-25",8],["2022-09-19",7.5],["2023-07-24",8.5],["2023-08-15",12],
+["2023-09-18",13],["2023-10-30",15],["2023-12-18",16],["2024-07-29",18],["2024-09-16",19],
+["2024-10-28",21],["2025-06-09",20],["2025-07-28",18],["2025-09-15",17],["2025-10-27",16.5],
+["2025-12-22",16],["2026-02-16",15.5],["2026-03-23",15],["2026-04-27",14.5],["2026-06-22",14.25],
+["2026-07-27",14]];
+var NEXT_MEETING="23.10.2026";
+var DAY=86400000, MOR_FROM=u("2022-04-01"), MOR_TO=u("2022-10-01");
+
+function u(s){var p=String(s).split("-");return Date.UTC(+p[0],+p[1]-1,+p[2]);}
+function pad(n){return n<10?"0"+n:""+n;}
+function fmtD(t){var d=new Date(t);return pad(d.getUTCDate())+"."+pad(d.getUTCMonth()+1)+"."+d.getUTCFullYear();}
+function iso(t){var d=new Date(t);return d.getUTCFullYear()+"-"+pad(d.getUTCMonth()+1)+"-"+pad(d.getUTCDate());}
+function today0(){var d=new Date();return Date.UTC(d.getFullYear(),d.getMonth(),d.getDate());}
+function leap(y){return (y%4===0&&y%100!==0)||y%400===0;}
+function diy(t){return leap(new Date(t).getUTCFullYear())?366:365;}
+function money(n){return n.toLocaleString("ru-RU",{minimumFractionDigits:2,maximumFractionDigits:2});}
+function num(n){return n.toLocaleString("ru-RU",{maximumFractionDigits:2});}
+function parseNum(s){if(s==null)return NaN;s=String(s).replace(/\u00A0/g," ").replace(/\s/g,"").replace(",",".");return s?Number(s):NaN;}
+function rateOn(t){var r=RATES[0][1];for(var i=0;i<RATES.length;i++){if(u(RATES[i][0])<=t)r=RATES[i][1];else break;}return r;}
+
+function segments(from,to){
+  var out=[],cur=from;
+  while(cur<=to){
+    var rate=rateOn(cur),end=to,i;
+    for(i=0;i<RATES.length;i++){var b=u(RATES[i][0]);if(b>cur){if(b-DAY<end)end=b-DAY;break;}}
+    var ye=Date.UTC(new Date(cur).getUTCFullYear(),11,31);
+    if(ye<end)end=ye;
+    out.push({from:cur,to:end,rate:rate});
+    cur=end+DAY;
+  }
+  return out;
+}
+function cutMor(segs){
+  var out=[];
+  for(var i=0;i<segs.length;i++){
+    var s=segs[i];
+    if(s.to<MOR_FROM||s.from>MOR_TO){out.push(s);continue;}
+    if(s.from<MOR_FROM)out.push({from:s.from,to:MOR_FROM-DAY,rate:s.rate});
+    out.push({from:Math.max(s.from,MOR_FROM),to:Math.min(s.to,MOR_TO),rate:s.rate,skip:true});
+    if(s.to>MOR_TO)out.push({from:MOR_TO+DAY,to:s.to,rate:s.rate});
+  }
+  return out;
+}
+
+/* ====== сумма прописью ====== */
+var O1=["","один","два","три","четыре","пять","шесть","семь","восемь","девять","десять","одиннадцать","двенадцать","тринадцать","четырнадцать","пятнадцать","шестнадцать","семнадцать","восемнадцать","девятнадцать"];
+var O1f=["","одна","две","три","четыре","пять","шесть","семь","восемь","девять","десять","одиннадцать","двенадцать","тринадцать","четырнадцать","пятнадцать","шестнадцать","семнадцать","восемнадцать","девятнадцать"];
+var TENS=["","","двадцать","тридцать","сорок","пятьдесят","шестьдесят","семьдесят","восемьдесят","девяносто"];
+var HUND=["","сто","двести","триста","четыреста","пятьсот","шестьсот","семьсот","восемьсот","девятьсот"];
+function tri(n,fem){
+  var r=[],h=Math.floor(n/100),t=Math.floor(n%100/10),o=n%10,rest=n%100;
+  if(h)r.push(HUND[h]);
+  if(rest<20&&rest>0)r.push((fem?O1f:O1)[rest]);
+  else{if(t)r.push(TENS[t]);if(o)r.push((fem?O1f:O1)[o]);}
+  return r.join(" ");
+}
+function plural(n,f){var a=n%10,b=n%100;if(b>=11&&b<=19)return f[2];if(a===1)return f[0];if(a>=2&&a<=4)return f[1];return f[2];}
+function words(sum){
+  var rub=Math.floor(Math.abs(sum)),kop=Math.round((Math.abs(sum)-rub)*100);
+  if(kop===100){rub+=1;kop=0;}
+  var G=[["","",""],["тысяча","тысячи","тысяч"],["миллион","миллиона","миллионов"],["миллиард","миллиарда","миллиардов"],["триллион","триллиона","триллионов"]];
+  var parts=[],n=rub,chunks=[],i;
+  if(n===0)parts.push("ноль");
+  while(n>0){chunks.push(n%1000);n=Math.floor(n/1000);}
+  for(i=chunks.length-1;i>=0;i--){
+    if(!chunks[i])continue;
+    parts.push(tri(chunks[i],i===1));
+    if(i>0)parts.push(plural(chunks[i],G[i]));
+  }
+  var s=parts.join(" ").replace(/\s+/g," ").trim();
+  s=s.charAt(0).toUpperCase()+s.slice(1);
+  return (sum<0?"Минус ":"")+s+" "+plural(rub,["рубль","рубля","рублей"])+" "+pad(kop)+" "+plural(kop,["копейка","копейки","копеек"]);
+}
+
+/* ====== нерабочие дни ====== */
+var HOL=["01-01","01-02","01-03","01-04","01-05","01-06","01-07","01-08","02-23","03-08","05-01","05-09","06-12","11-04"];
+function isOff(t){var d=new Date(t),w=d.getUTCDay();if(w===0||w===6)return true;
+  return HOL.indexOf(pad(d.getUTCMonth()+1)+"-"+pad(d.getUTCDate()))>=0;}
+function nextWork(t){var x=t,i=0;while(isOff(x)&&i<30){x+=DAY;i++;}return x;}
+function addMonths(t,m){var d=new Date(t),y=d.getUTCFullYear(),mo=d.getUTCMonth()+m,day=d.getUTCDate();
+  var last=new Date(Date.UTC(y,mo+1,0)).getUTCDate();return Date.UTC(y,mo,Math.min(day,last));}
+
+/* ====== вспомогательное ====== */
+function $(id){return document.getElementById(id);}
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
+var toastT;
+function toast(m){var e=$("toast");e.textContent=m;e.classList.add("on");clearTimeout(toastT);
+  toastT=setTimeout(function(){e.classList.remove("on");},1700);}
+function perRow(d,m,v,cls){
+  return '<div class="per '+(cls||"")+'"><div class="l"><div class="d">'+d+'</div>'+
+    (m?'<div class="m">'+m+'</div>':'')+'</div><div class="v">'+v+'</div></div>';
+}
+var LAST={};
+function render(box,key,html,plain,quiet){
+  LAST[key]=plain;
+  box.innerHTML=html+'<div class="acts"><button data-copy="'+key+'">Скопировать</button>'+
+    '<button data-save="'+key+'">Отправить</button></div>';
+  box.classList.add("on");
+  if(!quiet)setTimeout(function(){box.scrollIntoView({behavior:"smooth",block:"start"});},40);
+}
+document.addEventListener("click",function(e){
+  var el=e.target;if(!el.getAttribute)return;
+  var c=el.getAttribute("data-copy"),s=el.getAttribute("data-save"),t=el.getAttribute("data-set");
+  if(c&&LAST[c]){
+    if(navigator.clipboard&&navigator.clipboard.writeText)
+      navigator.clipboard.writeText(LAST[c]).then(function(){toast("Скопировано");},function(){toast("Не вышло скопировать");});
+    else toast("Копирование недоступно");
+  }
+  if(s&&LAST[s])shareText(LAST[s],s+".txt");
+  if(t){$(t).value=iso(today0());rememberAll();recalc(true);}
+});
+function shareText(text,name){
+  if(navigator.share){navigator.share({text:text}).then(function(){},function(){}).catch(function(){blobSave(name,text);});return;}
+  blobSave(name,text);
+}
+function blobSave(name,text){
+  try{
+    var b=new Blob([text],{type:"text/plain;charset=utf-8"}),a=document.createElement("a");
+    a.href=URL.createObjectURL(b);a.download=name;document.body.appendChild(a);a.click();
+    setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},0);toast("Сохранено");
+  }catch(e){toast("Недоступно");}
+}
+
+/* ====== шапка, вкладки, тема ====== */
+(function(){
+  var last=RATES[RATES.length-1];
+  $("rateLine").textContent="ключевая ставка "+num(last[1]).replace(".",",")+" % с "+fmtD(u(last[0]))+", заседание "+NEXT_MEETING;
+})();
+$("tabs").addEventListener("click",function(e){
+  var b=e.target.closest("button[data-p]");if(!b)return;
+  [].forEach.call($("tabs").children,function(x){x.setAttribute("aria-selected",x===b?"true":"false");});
+  [].forEach.call(document.querySelectorAll("section"),function(s){s.classList.toggle("on",s.id===b.getAttribute("data-p"));});
+  window.scrollTo(0,0);
+  try{localStorage.setItem("tab",b.getAttribute("data-p"));}catch(err){}
+});
+$("themeBtn").addEventListener("click",function(){
+  var cur=document.documentElement.getAttribute("data-theme");
+  var dark=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches;
+  var next=cur?(cur==="dark"?"light":"dark"):(dark?"light":"dark");
+  document.documentElement.setAttribute("data-theme",next);
+  try{localStorage.setItem("theme",next);}catch(err){}
+});
+try{var th=localStorage.getItem("theme");if(th)document.documentElement.setAttribute("data-theme",th);}catch(err){}
+
+/* форматирование сумм пробелами */
+document.addEventListener("input",function(e){
+  if(["a-sum","n-sum","g-sum"].indexOf(e.target.id)<0)return;
+  var v=e.target.value.replace(/[^\d,.]/g,"").replace(".",","),p=v.split(",");
+  e.target.value=p[0].replace(/\B(?=(\d{3})+(?!\d))/g," ")+(p.length>1?","+p[1].slice(0,2):"");
+});
+
+/* ====== 395 ====== */
+function calc395(quiet){
+  var err=$("a-err");err.textContent="";
+  var sum=parseNum($("a-sum").value),f=$("a-from").value,t=$("a-to").value;
+  if(!isFinite(sum)||sum<=0){if(!quiet)err.textContent="Укажите сумму долга.";return;}
+  if(!f||!t){if(!quiet)err.textContent="Укажите период.";return;}
+  var F=u(f),T=u(t);
+  if(T<F){if(!quiet)err.textContent="Дата «по» раньше даты «с».";return;}
+  var segs=segments(F,T);
+  if($("a-mor").checked)segs=cutMor(segs);
+  var rows="",total=0,days=0;
+  var plain="РАСЧЁТ ПРОЦЕНТОВ ПО СТ. 395 ГК РФ\nСумма долга: "+money(sum)+" руб.\nПериод: "+fmtD(F)+" — "+fmtD(T)+"\n\n";
+  segs.forEach(function(s){
+    var d=Math.round((s.to-s.from)/DAY)+1,dy=diy(s.from);
+    var p=s.skip?0:sum*s.rate/100/dy*d;
+    if(!s.skip){total+=p;days+=d;}
+    rows+=perRow(fmtD(s.from)+" — "+fmtD(s.to),
+      s.skip?"мораторий":d+" дн. · "+num(s.rate).replace(".",",")+" % · "+dy+" дн. в году",
+      s.skip?"—":money(p),s.skip?"skip":"");
+    plain+=fmtD(s.from)+" — "+fmtD(s.to)+" · "+d+" дн. · "+(s.skip?"мораторий":num(s.rate)+" % · "+dy)+" · "+(s.skip?"—":money(p))+"\n";
+  });
+  rows+=perRow("Итого",days+" дн.",money(total),"sum");
+  plain+="\nИтого: "+money(total)+" руб. за "+days+" дн.\n"+words(total);
+  render($("a-res"),"raschet-395",
+    '<div class="total"><div class="cap">Проценты по ст. 395 ГК РФ</div><div class="sum">'+money(total)+' ₽</div>'+
+    '<div class="wrds">'+esc(words(total))+'</div><div class="meta">Просрочка '+days+
+    ' дн. Ставка — действовавшая в каждом периоде, делитель — фактическое число дней в году.</div></div>'+
+    '<div class="pers">'+rows+'</div>',plain,quiet);
+}
+$("a-go").addEventListener("click",function(){calc395(false);});
+
+/* ====== неустойка ====== */
+$("n-mode").addEventListener("change",function(){$("n-pct-wrap").style.display=this.value==="pct"?"":"none";});
+function calcNeu(quiet){
+  var err=$("n-err");err.textContent="";
+  var sum=parseNum($("n-sum").value),mode=$("n-mode").value,f=$("n-from").value,t=$("n-to").value;
+  var pct=parseNum($("n-pct").value),cap=parseNum($("n-cap").value);
+  if(!isFinite(sum)||sum<=0){if(!quiet)err.textContent="Укажите сумму долга.";return;}
+  if(mode==="pct"&&(!isFinite(pct)||pct<=0)){if(!quiet)err.textContent="Укажите процент за день.";return;}
+  if(!f||!t){if(!quiet)err.textContent="Укажите период.";return;}
+  var F=u(f),T=u(t);
+  if(T<F){if(!quiet)err.textContent="Дата «по» раньше даты «с».";return;}
+  var div=mode==="k300"?300:mode==="k150"?150:mode==="k130"?130:0;
+  var segs=div?segments(F,T):[{from:F,to:T,rate:null}];
+  if($("n-mor").checked)segs=cutMor(segs);
+  var rows="",total=0,days=0;
+  var head=div?"1/"+div+" ключевой ставки за день":num(pct).replace(".",",")+" % за день";
+  var plain="РАСЧЁТ НЕУСТОЙКИ\nСумма долга: "+money(sum)+" руб.\nРазмер: "+head+"\nПериод: "+fmtD(F)+" — "+fmtD(T)+"\n\n";
+  segs.forEach(function(s){
+    var d=Math.round((s.to-s.from)/DAY)+1,rate=div?s.rate/div:pct;
+    var p=s.skip?0:sum*rate/100*d;
+    if(!s.skip){total+=p;days+=d;}
+    rows+=perRow(fmtD(s.from)+" — "+fmtD(s.to),
+      s.skip?"мораторий":d+" дн. · "+(div?num(s.rate).replace(".",",")+" % ÷ "+div:num(pct).replace(".",",")+" %"),
+      s.skip?"—":money(p),s.skip?"skip":"");
+    plain+=fmtD(s.from)+" — "+fmtD(s.to)+" · "+d+" дн. · "+(s.skip?"мораторий":(div?num(s.rate)+" %/"+div:num(pct)+" %"))+" · "+(s.skip?"—":money(p))+"\n";
+  });
+  var raw=total,capped=false;
+  if(isFinite(cap)&&cap>0&&total>sum*cap/100){total=sum*cap/100;capped=true;}
+  rows+=perRow("Итого",days+" дн.",money(raw),"sum");
+  plain+="\nИтого: "+money(total)+" руб. за "+days+" дн.\n"+
+    (capped?"Ограничено "+num(cap)+" % от долга, расчётная величина "+money(raw)+" руб.\n":"")+words(total);
+  render($("n-res"),"raschet-neustoyki",
+    '<div class="total"><div class="cap">Неустойка · '+esc(head)+'</div><div class="sum">'+money(total)+' ₽</div>'+
+    '<div class="wrds">'+esc(words(total))+'</div><div class="meta">Просрочка '+days+' дн.'+
+    (capped?' Ограничено '+num(cap)+' % от долга, без предела — '+money(raw)+' ₽.':'')+'</div></div>'+
+    '<div class="pers">'+rows+'</div>'+
+    '<div class="warn">Суд вправе снизить неустойку по ст. 333 ГК РФ — для юрлица только по заявлению ответчика.</div>',plain,quiet);
+}
+$("n-go").addEventListener("click",function(){calcNeu(false);});
+
+/* ====== госпошлина ====== */
+function asScale(v){
+  if(v<=100000)return 10000;
+  if(v<=1000000)return 10000+(v-100000)*0.05;
+  if(v<=10000000)return 55000+(v-1000000)*0.03;
+  if(v<=50000000)return 325000+(v-10000000)*0.01;
+  return Math.min(725000+(v-50000000)*0.005,10000000);
+}
+function soyScale(v){
+  if(v<=100000)return 4000;
+  if(v<=300000)return 4000+(v-100000)*0.03;
+  if(v<=500000)return 10000+(v-300000)*0.025;
+  if(v<=1000000)return 15000+(v-500000)*0.02;
+  if(v<=3000000)return 25000+(v-1000000)*0.01;
+  if(v<=8000000)return 45000+(v-3000000)*0.007;
+  if(v<=24000000)return 80000+(v-8000000)*0.0035;
+  if(v<=50000000)return 136000+(v-24000000)*0.003;
+  if(v<=100000000)return 214000+(v-50000000)*0.002;
+  return Math.min(314000+(v-100000000)*0.0015,900000);
+}
+var GP={
+  as:{neimu:{org:50000,fiz:15000},dogovor:{org:50000,fiz:15000},nenpa:{org:50000,fiz:10000},
+      apel:{org:30000,fiz:10000},kass:{org:50000,fiz:20000},kassvs:{org:80000,fiz:30000},
+      obesp:{org:30000,fiz:30000},bankr:{org:100000,fiz:10000}},
+  soy:{neimu:{org:20000,fiz:3000},dogovor:{org:20000,fiz:3000},nenpa:{org:15000,fiz:3000},
+      apel:{org:15000,fiz:3000},kass:{org:20000,fiz:5000},kassvs:{org:25000,fiz:7000},
+      obesp:{org:10000,fiz:10000},bankr:{org:100000,fiz:10000}}
+};
+var GPLAW={imu:"пп. 1 п. 1",prikaz:"пп. 3 п. 1",neimu:"пп. 4 п. 1",dogovor:"пп. 2 п. 1",nenpa:"пп. 7 п. 1",
+apel:"пп. 19 п. 1",kass:"пп. 20 п. 1",kassvs:"пп. 21 п. 1",obesp:"пп. 17 п. 1",bankr:"пп. 8 п. 1"};
+function needSum(t){return t==="imu"||t==="prikaz";}
+$("g-type").addEventListener("change",function(){$("g-sum-wrap").style.display=needSum(this.value)?"":"none";});
+function calcGP(quiet){
+  var err=$("g-err");err.textContent="";
+  var court=$("g-court").value,who=$("g-who").value,type=$("g-type").value,v=parseNum($("g-sum").value);
+  var art=court==="as"?"333.21":"333.19",res,note="";
+  if(needSum(type)){
+    if(!isFinite(v)||v<=0){if(!quiet)err.textContent="Укажите цену иска.";return;}
+    var base=court==="as"?asScale(v):soyScale(v);
+    if(type==="imu"){res=base;note="Шкала по цене иска.";}
+    else{
+      var lim=court==="as"?750000:500000;
+      if(v>lim){if(!quiet)err.textContent="Судебный приказ — при требовании не более "+num(lim)+" ₽.";return;}
+      res=base/2;if(court==="as"&&res<8000)res=8000;
+      note="50 % от пошлины за иск"+(court==="as"?", но не менее 8 000 ₽":"")+".";
+    }
+  }else{
+    if(court==="soy"&&type==="bankr"){if(!quiet)err.textContent="Банкротство рассматривает арбитражный суд.";return;}
+    res=GP[court][type][who];note="Фиксированная ставка.";
+  }
+  res=Math.round(res);
+  var plain="ГОСУДАРСТВЕННАЯ ПОШЛИНА\n"+(court==="as"?"Арбитражный суд":"Суд общей юрисдикции")+", "+
+    (who==="org"?"организация":"физлицо / ИП")+"\n"+$("g-type").selectedOptions[0].text+
+    (needSum(type)?"\nЦена иска: "+money(v)+" руб.":"")+"\nПошлина: "+num(res)+" руб.\n"+words(res)+
+    "\nОснование: "+GPLAW[type]+" ст. "+art+" НК РФ";
+  render($("g-res"),"gosposhlina",
+    '<div class="total"><div class="cap">Госпошлина</div><div class="sum">'+num(res)+' ₽</div>'+
+    '<div class="wrds">'+esc(words(res))+'</div><div class="meta">'+GPLAW[type]+' ст. '+art+' НК РФ. '+note+'</div></div>'+
+    '<div class="note">ИП и главы КФХ платят по ставке физических лиц (п. 3 постановления Пленума ВС РФ № 39 от 23.12.2025). Пошлина — за каждое самостоятельное требование; неустойка и проценты входят в цену иска на день обращения.</div>',plain,quiet);
+}
+$("g-go").addEventListener("click",function(){calcGP(false);});
+
+/* ====== сроки ====== */
+var SROKI=[
+ {v:"apk-apel",t:"АПК: апелляционная жалоба — 1 мес.",n:1,u:"m",base:"Решение изготовлено в полном объёме",law:"ч. 1 ст. 259 АПК РФ"},
+ {v:"apk-kass",t:"АПК: кассация в округ — 2 мес.",n:2,u:"m",base:"Решение вступило в законную силу",law:"ч. 1 ст. 276 АПК РФ"},
+ {v:"apk-vs",t:"АПК: кассация в ВС РФ — 2 мес.",n:2,u:"m",base:"Вступил в силу последний обжалуемый акт",law:"ч. 1 ст. 291.2 АПК РФ"},
+ {v:"apk-nadzor",t:"АПК: надзорная жалоба — 3 мес.",n:3,u:"m",base:"Вступил в силу последний акт",law:"ч. 1 ст. 308.1 АПК РФ"},
+ {v:"apk-rash",t:"АПК: судебные расходы — 3 мес.",n:3,u:"m",base:"Вступил в силу последний судебный акт",law:"ч. 2 ст. 112 АПК РФ"},
+ {v:"apk-pret",t:"АПК: претензионный срок — 30 дней",n:30,u:"d",base:"Претензия направлена",law:"ч. 5 ст. 4 АПК РФ"},
+ {v:"gpk-apel",t:"ГПК: апелляционная жалоба — 1 мес.",n:1,u:"m",base:"Решение принято в окончательной форме",law:"ч. 2 ст. 321 ГПК РФ"},
+ {v:"gpk-kass",t:"ГПК: кассация в КСОЮ — 3 мес.",n:3,u:"m",base:"Решение вступило в законную силу",law:"ч. 1 ст. 376.1 ГПК РФ"},
+ {v:"gpk-vs",t:"ГПК: кассация в ВС РФ — 3 мес.",n:3,u:"m",base:"Вступил в силу обжалуемый акт",law:"ч. 1 ст. 390.3 ГПК РФ"},
+ {v:"gpk-prikaz",t:"ГПК: возражения на судебный приказ — 10 дней",n:10,u:"d",base:"Копия приказа получена",law:"ст. 128 ГПК РФ"},
+ {v:"kas-apel",t:"КАС: апелляционная жалоба — 1 мес.",n:1,u:"m",base:"Решение принято в окончательной форме",law:"ч. 1 ст. 298 КАС РФ"},
+ {v:"kas-kass",t:"КАС: кассационная жалоба — 6 мес.",n:6,u:"m",base:"Решение вступило в законную силу",law:"ч. 2 ст. 318 КАС РФ"},
+ {v:"fssp-jal",t:"229-ФЗ: жалоба на пристава — 10 дней",n:10,u:"d",base:"Постановление вынесено или стало известно",law:"ст. 122 Закона № 229-ФЗ"},
+ {v:"fssp-il",t:"229-ФЗ: предъявление исполнительного листа — 3 года",n:3,u:"y",base:"Судебный акт вступил в законную силу",law:"ч. 1 ст. 21 Закона № 229-ФЗ"},
+ {v:"isk",t:"Исковая давность — 3 года",n:3,u:"y",base:"День, когда узнали о нарушении права",law:"ст. 196, 200 ГК РФ"},
+ {v:"custom",t:"Свой срок",n:0,u:"d",base:"Дата начала",law:""}
+];
+(function(){
+  var sel=$("s-type");
+  SROKI.forEach(function(s){var o=document.createElement("option");o.value=s.v;o.textContent=s.t;sel.appendChild(o);});
+  sel.addEventListener("change",function(){
+    var s=SROKI.filter(function(x){return x.v===sel.value;})[0];
+    $("s-custom-wrap").style.display=sel.value==="custom"?"flex":"none";
+    $("s-base-lab").textContent=s.base;
+  });
+})();
+function calcSrok(quiet){
+  var err=$("s-err");err.textContent="";
+  var s=SROKI.filter(function(x){return x.v===$("s-type").value;})[0],b=$("s-base").value;
+  if(!b){if(!quiet)err.textContent="Укажите дату начала.";return;}
+  var n=s.v==="custom"?parseInt($("s-n").value,10):s.n;
+  var unit=s.v==="custom"?$("s-unit").value:s.u;
+  if(!(n>0)){if(!quiet)err.textContent="Укажите количество.";return;}
+  var B=u(b),end=unit==="d"?B+n*DAY:unit==="m"?addMonths(B,n):addMonths(B,n*12);
+  var rolled=nextWork(end),T=today0(),left=Math.round((rolled-T)/DAY);
+  var unitTxt=unit==="d"?"дн.":unit==="m"?"мес.":"г.";
+  var plain="СРОК: "+s.t+"\n"+s.base+": "+fmtD(B)+"\nИстекает: "+fmtD(rolled)+
+    (rolled!==end?" (перенос с "+fmtD(end)+", нерабочий день, ст. 193 ГК РФ)":"")+
+    (s.law?"\nОснование: "+s.law:"")+"\nОсталось: "+left+" дн.";
+  render($("s-res"),"srok",
+    '<div class="total"><div class="cap">Срок истекает</div><div class="sum">'+fmtD(rolled)+'</div>'+
+    '<div class="wrds">'+(left<0?"Истёк "+Math.abs(left)+" дн. назад":left===0?"Истекает сегодня":"Осталось "+left+" дн.")+'</div>'+
+    '<div class="meta">'+esc(s.base)+': '+fmtD(B)+' + '+n+' '+unitTxt+
+    (rolled!==end?'. Перенесён с '+fmtD(end)+', нерабочий день (ст. 193 ГК РФ)':'')+(s.law?'. '+esc(s.law):'')+'</div></div>'+
+    '<div class="note">Учтены выходные и праздники по ст. 112 ТК РФ. Переносы выходных на конкретный год сверьте с производственным календарём.</div>',plain,quiet);
+}
+$("s-go").addEventListener("click",function(){calcSrok(false);});
+
+/* ====== задачи ====== */
+var tasks=[],WD=["воскресенье","понедельник","вторник","среда","четверг","пятница","суббота"];
+var MON=["январ","феврал","март","апрел","ма","июн","июл","август","сентябр","октябр","ноябр","декабр"];
+function localDate(s){
+  var T=today0(),low=s.toLowerCase(),m,i;
+  if(/послезавтра/.test(low))return iso(T+2*DAY);
+  if(/завтра/.test(low))return iso(T+DAY);
+  if(/сегодня/.test(low))return iso(T);
+  m=low.match(/(\d{1,2})[.\/](\d{1,2})(?:[.\/](\d{2,4}))?/);
+  if(m){var y=m[3]?(m[3].length===2?2000+ +m[3]:+m[3]):new Date(T).getUTCFullYear();
+    var d1=Date.UTC(y,+m[2]-1,+m[1]);if(!m[3]&&d1<T)d1=Date.UTC(y+1,+m[2]-1,+m[1]);return iso(d1);}
+  m=low.match(/(\d{1,2})\s+([а-яё]{3,})/);
+  if(m){for(i=0;i<12;i++){if(m[2].indexOf(MON[i])===0){var y2=new Date(T).getUTCFullYear(),d2=Date.UTC(y2,i,+m[1]);
+    if(d2<T)d2=Date.UTC(y2+1,i,+m[1]);return iso(d2);}}}
+  for(var w=1;w<=6;w++){if(low.indexOf(WD[w].slice(0,5))>=0){var cur=new Date(T).getUTCDay();return iso(T+((w-cur+7)%7)*DAY);}}
+  if(/воскресень/.test(low)){var c2=new Date(T).getUTCDay();return iso(T+((0-c2+7)%7)*DAY);}
+  if(/на этой неделе|до конца недели/.test(low)){var c3=new Date(T).getUTCDay();return iso(T+((5-c3+7)%7)*DAY);}
+  return "";
+}
+function localSplit(text){
+  var out=[];
+  text.split(/[\n;]+/).forEach(function(p){
+    p.split(/,\s+(?=(?:в|во|до|к|на|завтра|сегодня|послезавтра|потом|затем)\s)/i).forEach(function(q){
+      q=q.replace(/^[\s,.-]+|[\s,.]+$/g,"");
+      if(q.length>1)out.push({text:q.charAt(0).toUpperCase()+q.slice(1),date:localDate(q)});
+    });
+  });
+  return out;
+}
+$("t-go").addEventListener("click",function(){
+  var err=$("t-err");err.textContent="";
+  var text=$("t-in").value.trim(),cs=$("t-case").value.trim();
+  if(!text){err.textContent="Надиктуйте или введите текст.";return;}
+  var list=localSplit(text);
+  list.forEach(function(t){
+    tasks.push({id:String(Date.now())+Math.round(Math.random()*9999),text:t.text,date:t.date,cs:cs,done:false});
+  });
+  $("t-in").value="";drawTasks();saveTasks();toast("Добавлено: "+list.length);
+});
+$("t-clean").addEventListener("click",function(){
+  tasks=tasks.filter(function(t){return !t.done;});drawTasks();saveTasks();
+});
+$("t-list").addEventListener("click",function(e){
+  if(!e.target.getAttribute)return;
+  var id=e.target.getAttribute("data-t"),del=e.target.getAttribute("data-td");
+  if(id){tasks.forEach(function(t){if(t.id===id)t.done=!t.done;});drawTasks();saveTasks();}
+  if(del){tasks=tasks.filter(function(t){return t.id!==del;});drawTasks();saveTasks();}
+});
+function drawTasks(){
+  var box=$("t-list");
+  if(!tasks.length){box.innerHTML='<div class="empty">Пока пусто.</div>';return;}
+  var T=today0(),c=new Date(T).getUTCDay(),weekEnd=T+((7-c)%7)*DAY;
+  var G=[["Просрочено",[],"late"],["Сегодня",[],""],["Завтра",[],""],["На этой неделе",[],""],["Позже",[],""],["Без срока",[],""],["Выполнено",[],""]];
+  tasks.forEach(function(t){
+    if(t.done){G[6][1].push(t);return;}
+    if(!t.date){G[5][1].push(t);return;}
+    var d=u(t.date);
+    if(d<T)G[0][1].push(t);else if(d===T)G[1][1].push(t);
+    else if(d===T+DAY)G[2][1].push(t);
+    else if(d<=weekEnd)G[3][1].push(t);else G[4][1].push(t);
+  });
+  var html="";
+  G.forEach(function(g){
+    if(!g[1].length)return;
+    g[1].sort(function(a,b){return (a.date||"9999")<(b.date||"9999")?-1:1;});
+    html+='<div class="gh '+g[2]+'">'+g[0]+" · "+g[1].length+"</div>";
+    g[1].forEach(function(t){
+      var sub=[t.date?fmtD(u(t.date)):"",t.cs||""].filter(Boolean).join(" · ");
+      html+='<div class="task'+(t.done?" done":"")+'"><input type="checkbox" data-t="'+t.id+'"'+(t.done?" checked":"")+'>'+
+        '<div class="b"><div class="x">'+esc(t.text)+'</div>'+(sub?'<div class="s">'+esc(sub)+'</div>':'')+
+        '</div><button class="del" data-td="'+t.id+'">×</button></div>';
+    });
+  });
+  box.innerHTML=html;
+}
+function saveTasks(){try{localStorage.setItem("tasks",JSON.stringify(tasks));}catch(e){}}
+
+/* ====== память полей, пересчёт на лету, запуск ====== */
+var REMEMBER=["a-sum","a-from","a-to","n-sum","n-pct","n-from","n-to","n-cap","n-mode","g-sum","g-court","g-who","g-type","s-type","s-base","s-n","s-unit"];
+function rememberAll(){
+  var o={};REMEMBER.forEach(function(id){var e=$(id);if(e)o[id]=e.value;});
+  o["a-mor"]=$("a-mor").checked?"1":"";o["n-mor"]=$("n-mor").checked?"1":"";
+  try{localStorage.setItem("fields",JSON.stringify(o));}catch(err){}
+}
+var rcT;
+function recalc(now){
+  clearTimeout(rcT);
+  rcT=setTimeout(function(){
+    if($("a-res").classList.contains("on"))calc395(true);
+    if($("n-res").classList.contains("on"))calcNeu(true);
+    if($("g-res").classList.contains("on"))calcGP(true);
+    if($("s-res").classList.contains("on"))calcSrok(true);
+  },now?0:350);
+}
+(function(){
+  /* задачи и перенос старого реестра дел */
+  try{tasks=JSON.parse(localStorage.getItem("tasks")||"[]")||[];}catch(e){tasks=[];}
+  try{
+    if(!localStorage.getItem("casesMoved")){
+      var old=JSON.parse(localStorage.getItem("cases")||"[]")||[];
+      old.forEach(function(c){
+        tasks.push({id:"m"+String(Date.now())+Math.round(Math.random()*9999),
+          text:c.what||c.name||"Дело",date:c.date||"",
+          cs:[c.client,c.num,c.court].filter(Boolean).join(" · ")||c.name||"",done:false});
+      });
+      if(old.length)saveTasks();
+      localStorage.setItem("casesMoved","1");
+    }
+  }catch(e){}
+  drawTasks();
+
+  /* восстановление полей */
+  var o={};try{o=JSON.parse(localStorage.getItem("fields")||"{}");}catch(e){}
+  REMEMBER.forEach(function(id){var e=$(id);if(e&&o[id])e.value=o[id];});
+  $("a-mor").checked=!!o["a-mor"];$("n-mor").checked=!!o["n-mor"];
+  if(!$("a-to").value)$("a-to").value=iso(today0());
+  if(!$("n-to").value)$("n-to").value=iso(today0());
+  $("n-pct-wrap").style.display=$("n-mode").value==="pct"?"":"none";
+  $("g-sum-wrap").style.display=needSum($("g-type").value)?"":"none";
+  var sr=SROKI.filter(function(x){return x.v===$("s-type").value;})[0];
+  if(sr){$("s-base-lab").textContent=sr.base;$("s-custom-wrap").style.display=sr.v==="custom"?"flex":"none";}
+
+  /* пересчёт при правке любого поля */
+  REMEMBER.concat(["a-mor","n-mor"]).forEach(function(id){
+    var e=$(id);if(!e)return;
+    e.addEventListener("change",function(){rememberAll();recalc(false);});
+    e.addEventListener("input",function(){rememberAll();recalc(false);});
+  });
+
+  /* последняя открытая вкладка */
+  try{
+    var tb=localStorage.getItem("tab");
+    if(tb&&$(tb)){
+      [].forEach.call($("tabs").children,function(x){x.setAttribute("aria-selected",x.getAttribute("data-p")===tb?"true":"false");});
+      [].forEach.call(document.querySelectorAll("section"),function(s){s.classList.toggle("on",s.id===tb);});
+    }
+  }catch(e){}
+})();
+
+(function(){try{
+  if(window.top!==window.self)return;
+  if(!("serviceWorker" in navigator))return;
+  if(location.protocol!=="https:"&&location.hostname!=="localhost")return;
+  window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){});});
+}catch(e){}})();
+</script>
+</body>
+</html>
