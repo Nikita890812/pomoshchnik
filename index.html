@@ -427,9 +427,33 @@ function blobSave(name,text){
 }
 
 /* ====== шапка, вкладки, тема ====== */
+function updateRateLine(){
+  var last=RATES[RATES.length-1],s="ключевая ставка "+num(last[1]).replace(".",",")+" % с "+fmtD(u(last[0]));
+  var nm=NEXT_MEETING.split(".");
+  if(u(nm[2]+"-"+nm[1]+"-"+nm[0])>=today0())s+=", заседание "+NEXT_MEETING;
+  if(RATES_SRC)s+=" · "+RATES_SRC;
+  $("rateLine").textContent=s;
+}
+var RATES_SRC="";
+/* ставка подтягивается из rates.json, который обновляет сценарий на GitHub */
 (function(){
-  var last=RATES[RATES.length-1];
-  $("rateLine").textContent="ключевая ставка "+num(last[1]).replace(".",",")+" % с "+fmtD(u(last[0]))+", заседание "+NEXT_MEETING;
+  function apply(d){
+    if(!d||!Array.isArray(d.rates)||d.rates.length<40)return false;
+    var ok=d.rates.filter(function(r){return r&&/^\d{4}-\d{2}-\d{2}$/.test(r[0])&&isFinite(r[1])&&r[1]>0;});
+    if(ok.length!==d.rates.length)return false;
+    ok.sort(function(a,b){return a[0]<b[0]?-1:1;});
+    RATES=ok.map(function(r){return [r[0],Number(r[1])];});
+    RATES_SRC=d.updated?"данные ЦБ от "+fmtD(u(d.updated)):"";
+    updateRateLine();
+    if(typeof recalc==="function")recalc(true);
+    return true;
+  }
+  try{var c=localStorage.getItem("ratesCache");if(c)apply(JSON.parse(c));}catch(e){}
+  updateRateLine();
+  if(typeof fetch!=="function")return;
+  fetch("./rates.json",{cache:"no-store"}).then(function(r){return r.ok?r.json():null;}).then(function(d){
+    if(apply(d)){try{localStorage.setItem("ratesCache",JSON.stringify(d));}catch(e){}}
+  }).catch(function(){});
 })();
 $("tabs").addEventListener("click",function(e){
   var b=e.target.closest("button[data-p]");if(!b)return;
